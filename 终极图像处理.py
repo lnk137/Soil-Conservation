@@ -78,25 +78,29 @@ def find_y_coordinate(img_pil, target_ratio=0.8):
 def calculate_length_index(img_pil):
     img = np.array(img_pil.convert("L"))  # 转换为灰度图像数组
     height, width = img.shape
-    ratio_list=[]
-    difference_proportion_list=[]
+    ratio_list = []
+    difference_proportion_list = []
+    
     for y in range(height):
         row = img[y, :]  # 获取当前行像素值
         black_pixels = np.sum(row <= 120)  # 计算当前行黑色像素数量
         black_ratio = black_pixels / width  # 计算当前行黑色像素比例
         ratio_list.append(black_ratio)  # 保存当前行黑色像素比例
-        #如果列表中有至少两个元素，计算当前行与上一行的差值比例
-        if len(ratio_list)>=2:
-            difference_proportion=abs(ratio_list[y]-ratio_list[y-1])
-            difference_proportion = round(difference_proportion, 3)  # 保留三位小数
+        
+        # 如果列表中有至少两个元素，计算当前行与上一行的差值比例
+        if len(ratio_list) >= 2:
+            difference_proportion = abs(ratio_list[-1] - ratio_list[-2])
             difference_proportion_list.append(difference_proportion)
-    print(f"黑色像素比例列表{ratio_list}")
-    print(f"黑色像素比例差值比例列表{difference_proportion_list}")
-    total_difference_proportion = sum(difference_proportion_list)
-    total_difference_proportion = round(total_difference_proportion, 3)*100  # 保留三位小数
-    print(f"总黑色像素比例差值比例{total_difference_proportion}")
-    return total_difference_proportion
     
+    print(f"黑色像素比例列表: {ratio_list}")
+    print(f"黑色像素比例差值比例列表: {difference_proportion_list}")
+    
+    total_difference_proportion = sum(difference_proportion_list)
+    total_difference_proportion = round(total_difference_proportion, 3) # 保留三位小数
+    total_difference_proportion *= 100  # 乘以100
+    print(f"总黑色像素比例差值比例: {total_difference_proportion}")
+    return total_difference_proportion
+
 # 在图像上绘制红线
 def draw_red_line(img_pil, y_coordinate):
     draw = ImageDraw.Draw(img_pil)
@@ -163,7 +167,7 @@ def main():
         
         y_coordinate = find_y_coordinate(final_img)
         total_difference_proportion=calculate_length_index(final_img)
-        total_difference_proportion_label.config(text=f"长度指数: {total_difference_proportion} ")
+        total_difference_proportion_label.config(text=f"长度指数: {total_difference_proportion:.2f} ")
         display_img = draw_red_line(final_img.copy(), y_coordinate)
         display_image(display_img)
         y_coordinate_label.config(text=f"基质流深度: {y_coordinate / 10} cm")
@@ -256,7 +260,7 @@ def main():
         
         y_coordinate = find_y_coordinate(final_img)
         total_difference_proportion=calculate_length_index(final_img)
-        total_difference_proportion_label.config(text=f"长度指数: {total_difference_proportion} ")
+        total_difference_proportion_label.config(text=f"长度指数: {total_difference_proportion:.2f} ")
         display_img = draw_red_line(final_img.copy(), y_coordinate)
         display_image(display_img)
         y_coordinate_label.config(text=f"基质流深度: {y_coordinate / 10} cm")
