@@ -116,7 +116,7 @@ def calculate_priority_flow_percentage(soil_width, y_coordinate, S_Black):
 # 主函数，创建并运行GUI应用程序
 def main():
     root = tk.Tk()
-    root.title("智绘融合")  # 设置窗口标题
+    root.title("Preferential flow calculation")  # 设置窗口标题
 
     # 浏览文件函数
     def browse_file():
