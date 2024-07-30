@@ -75,7 +75,28 @@ def find_y_coordinate(img_pil, target_ratio=0.8):
         if black_ratio <= target_ratio:
             return y  # 返回符合条件的y坐标
     return -1  # 如果没有找到符合条件的y坐标
-
+def calculate_length_index(img_pil):
+    img = np.array(img_pil.convert("L"))  # 转换为灰度图像数组
+    height, width = img.shape
+    ratio_list=[]
+    difference_proportion_list=[]
+    for y in range(height):
+        row = img[y, :]  # 获取当前行像素值
+        black_pixels = np.sum(row <= 120)  # 计算当前行黑色像素数量
+        black_ratio = black_pixels / width  # 计算当前行黑色像素比例
+        ratio_list.append(black_ratio)  # 保存当前行黑色像素比例
+        #如果列表中有至少两个元素，计算当前行与上一行的差值比例
+        if len(ratio_list)>=2:
+            difference_proportion=abs(ratio_list[y]-ratio_list[y-1])
+            difference_proportion = round(difference_proportion, 3)  # 保留三位小数
+            difference_proportion_list.append(difference_proportion)
+    print(f"黑色像素比例列表{ratio_list}")
+    print(f"黑色像素比例差值比例列表{difference_proportion_list}")
+    total_difference_proportion = sum(difference_proportion_list)
+    total_difference_proportion = round(total_difference_proportion, 3)*100  # 保留三位小数
+    print(f"总黑色像素比例差值比例{total_difference_proportion}")
+    return total_difference_proportion
+    
 # 在图像上绘制红线
 def draw_red_line(img_pil, y_coordinate):
     draw = ImageDraw.Draw(img_pil)
@@ -95,7 +116,7 @@ def calculate_priority_flow_percentage(soil_width, y_coordinate, S_Black):
 # 主函数，创建并运行GUI应用程序
 def main():
     root = tk.Tk()
-    root.title("基流质深度计算器")  # 设置窗口标题
+    root.title("智绘融合")  # 设置窗口标题
 
     # 浏览文件函数
     def browse_file():
@@ -141,6 +162,8 @@ def main():
         black_area_label.config(text=f"染色面积: {S_Black:.2f} cm^2")
         
         y_coordinate = find_y_coordinate(final_img)
+        total_difference_proportion=calculate_length_index(final_img)
+        total_difference_proportion_label.config(text=f"长度指数: {total_difference_proportion} ")
         display_img = draw_red_line(final_img.copy(), y_coordinate)
         display_image(display_img)
         y_coordinate_label.config(text=f"基质流深度: {y_coordinate / 10} cm")
@@ -232,6 +255,8 @@ def main():
         black_area_label.config(text=f"染色面积: {S_Black:.2f} cm^2")
         
         y_coordinate = find_y_coordinate(final_img)
+        total_difference_proportion=calculate_length_index(final_img)
+        total_difference_proportion_label.config(text=f"长度指数: {total_difference_proportion} ")
         display_img = draw_red_line(final_img.copy(), y_coordinate)
         display_image(display_img)
         y_coordinate_label.config(text=f"基质流深度: {y_coordinate / 10} cm")
@@ -318,12 +343,15 @@ def main():
 
     frame7 = ttk.Frame(root)
     frame7.pack(padx=10, pady=10, fill='x')
-    black_area_label = ttk.Label(frame7, text="染色面积: (请先导入图片)")
+    black_area_label = ttk.Label(frame7, text="染色面积: (请先导入图片)", width=25)
     black_area_label.pack(side='left')
 
     y_coordinate_label = ttk.Label(frame7, text="基质流深度: (请先导入图片)", width=25)
     y_coordinate_label.pack(side='left')
-
+    
+    total_difference_proportion_label = ttk.Label(frame7, text="长度指数: (请先导入图片)", width=25)
+    total_difference_proportion_label.pack(side='left')
+    
     ttk.Label(frame7, text="土壤垂直剖面宽度 (cm):").pack(side='left')
     soil_profile_width_entry = ttk.Entry(frame7, width=5)
     soil_profile_width_entry.pack(side='left', padx=10)
