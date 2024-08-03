@@ -2,7 +2,7 @@
 import os
 import cv2
 import numpy as np
-from PIL import Image, ImageTk, ImageDraw
+from PIL import Image, ImageTk, ImageDraw, ImageOps
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from tkinter import ttk
@@ -11,7 +11,7 @@ import io
 import sys
 import string
 import math
-sys.path.append('./')  # 无论如何都不许删这行代码，确保当前目录在系统路径中
+
 
 # 使用PIL读取图像的函数
 def read_image_with_pil(image_path):
@@ -39,6 +39,7 @@ def resize_and_black_to_white(img_pil, size=(500, 500)):
                 continue  # 如果是黑色像素，跳过
             else:
                 img.putpixel((x, y), (255, 255, 255))  # 将非黑色像素转换为白色
+    img=ImageOps.invert(img)
     return img
 
 # 使用OpenCV进行图像降噪处理
@@ -92,8 +93,6 @@ def calculate_length_index(img_pil):
             difference_proportion = abs(ratio_list[-1] - ratio_list[-2])
             difference_proportion_list.append(difference_proportion)
     
-    print(f"黑色像素比例列表: {ratio_list}")
-    print(f"黑色像素比例差值比例列表: {difference_proportion_list}")
     
     total_difference_proportion = sum(difference_proportion_list)
     total_difference_proportion = round(total_difference_proportion, 3) # 保留三位小数
@@ -301,30 +300,30 @@ def main():
 
     frame4 = ttk.Frame(root)
     frame4.pack(padx=10, pady=5, fill='x')
-    ttk.Label(frame4, text="下限R:").pack(side='left')
+    ttk.Label(frame4, text="下限H:").pack(side='left')
     lower_hue_entry = ttk.Entry(frame4, width=10)
-    lower_hue_entry.insert(0, '0')
+    lower_hue_entry.insert(0, '60')
     lower_hue_entry.pack(side='left', padx=2)
-    ttk.Label(frame4, text="下限G:").pack(side='left')
+    ttk.Label(frame4, text="下限S:").pack(side='left')
     lower_saturation_entry = ttk.Entry(frame4, width=10)
     lower_saturation_entry.insert(0, '50')
     lower_saturation_entry.pack(side='left', padx=2)
-    ttk.Label(frame4, text="下限B:").pack(side='left')
+    ttk.Label(frame4, text="下限V:").pack(side='left')
     lower_value_entry = ttk.Entry(frame4, width=10)
     lower_value_entry.insert(0, '50')
     lower_value_entry.pack(side='left', padx=2)
 
     frame5 = ttk.Frame(root)
     frame5.pack(padx=10, pady=5, fill='x')
-    ttk.Label(frame5, text="上限R:").pack(side='left')
+    ttk.Label(frame5, text="上限H:").pack(side='left')
     upper_hue_entry = ttk.Entry(frame5, width=10)
-    upper_hue_entry.insert(0, '60')
+    upper_hue_entry.insert(0, '255')
     upper_hue_entry.pack(side='left', padx=2)
-    ttk.Label(frame5, text="上限G:").pack(side='left')
+    ttk.Label(frame5, text="上限S:").pack(side='left')
     upper_saturation_entry = ttk.Entry(frame5, width=10)
     upper_saturation_entry.insert(0, '150')
     upper_saturation_entry.pack(side='left', padx=2)
-    ttk.Label(frame5, text="上限B:").pack(side='left')
+    ttk.Label(frame5, text="上限V:").pack(side='left')
     upper_value_entry = ttk.Entry(frame5, width=10)
     upper_value_entry.insert(0, '150')
     upper_value_entry.pack(side='left', padx=2)
