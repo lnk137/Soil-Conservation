@@ -302,7 +302,7 @@ def main():
     frame4.pack(padx=10, pady=5, fill='x')
     ttk.Label(frame4, text="下限H:").pack(side='left')
     lower_hue_entry = ttk.Entry(frame4, width=10)
-    lower_hue_entry.insert(0, '60')
+    lower_hue_entry.insert(0, '35')
     lower_hue_entry.pack(side='left', padx=2)
     ttk.Label(frame4, text="下限S:").pack(side='left')
     lower_saturation_entry = ttk.Entry(frame4, width=10)
