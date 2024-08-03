@@ -137,10 +137,7 @@ def browse_file():
     if file_path:
         input_path_entry.delete(0, tk.END)
         input_path_entry.insert(0, file_path)
-        if not manual_mode_var.get():
-            update_image()
-        else:
-            update_manual_mode()
+        update_image()
 
 # 保存文件函数
 def save_file():
@@ -152,6 +149,7 @@ def save_file():
         img.save(file_path)  # 保存图像
         messagebox.showinfo("完成", f"图像处理完成并保存到 {file_path}")
 
+# 更新图像函数
 def update_image():
     input_path = input_path_entry.get()
     if not input_path:
@@ -163,13 +161,33 @@ def update_image():
         return
 
     img_pil = read_image_with_pil(input_path)
-    img_pil = process_and_resize_image(img_pil, lower_range, upper_range)
+    if not manual_mode_var.get():
+        img_pil = process_and_resize_image(img_pil, lower_range, upper_range)
     if img_pil is None:
         return
 
     apply_denoise_if_needed(img_pil)
+    perform_analysis_and_display(img_pil)
 
-    global S_Black, y_coordinate, black_ratio
+# 应用降噪处理（如果需要）
+def apply_denoise_if_needed(img_pil):
+    global final_img
+    if denoise_var.get():
+        try:
+            kernel_size = int(kernel_size_entry.get())
+            iterations = int(iterations_entry.get())
+        except ValueError:
+            messagebox.showerror("错误", "核大小和迭代次数必须是整数")
+            return
+        final_img = denoise_image(img_pil, kernel_size, iterations)
+    else:
+        final_img = img_pil
+
+# 执行分析并显示结果函数
+def perform_analysis_and_display(img_pil):
+    global final_img, S_Black, y_coordinate, black_ratio
+    final_img = img_pil
+
     S_Black, black_ratio = calculate_black_area_ratio(final_img)
     black_area_label.config(text=f"染色面积: {S_Black:.2f} cm^2")
 
@@ -233,44 +251,6 @@ def process_and_resize_image(img_pil, lower_range, upper_range):
     
     resized_img = resize_and_black_to_white(img_pil, size=(width, height))
     return resized_img
-
-# 应用降噪处理（如果需要）
-def apply_denoise_if_needed(img_pil):
-    global final_img
-    if denoise_var.get():
-        try:
-            kernel_size = int(kernel_size_entry.get())
-            iterations = int(iterations_entry.get())
-        except ValueError:
-            messagebox.showerror("错误", "核大小和迭代次数必须是整数")
-            return
-        final_img = denoise_image(img_pil, kernel_size, iterations)
-    else:
-        final_img = img_pil
-
-# 更新手动模式函数
-def update_manual_mode():
-    input_path = input_path_entry.get()
-    if not input_path:
-        messagebox.showerror("错误", "请输入图像路径")
-        return
-    
-    img_pil = read_image_with_pil(input_path)
-    global final_img, S_Black, y_coordinate, black_ratio
-    final_img = img_pil
-    S_Black, black_ratio = calculate_black_area_ratio(final_img)
-    black_area_label.config(text=f"染色面积: {S_Black:.2f} cm^2")
-    
-    y_coordinate = find_y_coordinate(final_img)
-    total_difference_proportion = calculate_length_index(final_img)
-    total_difference_proportion_label.config(text=f"长度指数: {total_difference_proportion:.2f} ")
-    # 在同一图像上绘制红线和蓝线
-    display_img = final_img.copy()
-    display_img = draw_red_line(display_img, y_coordinate)
-    display_img = draw_blue_line(display_img, get_Start_height())
-
-    display_image(display_img)
-    y_coordinate_label.config(text=f"基质流深度: {y_coordinate / 10} cm")
 
 # 显示图像函数
 def display_image(image):
