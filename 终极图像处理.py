@@ -171,13 +171,13 @@ def main():
         display_image(display_img)
         y_coordinate_label.config(text=f"基质流深度: {y_coordinate / 10} cm")
 
-        try:
-            soil_width = float(soil_profile_width_entry.get())
-            priority_flow_percentage = calculate_priority_flow_percentage(soil_width, y_coordinate, S_Black)
-            priority_flow_label.config(text=f"优先流百分比: {priority_flow_percentage} %")
-            black_ratio_label.config(text=f"染色面积比: {black_ratio * 100:.2f} %")
-        except ValueError:
-            messagebox.showerror("错误", "土壤剖面垂直宽度必须是一个数字")
+        # try:
+        #     soil_width = float(soil_profile_width_entry.get())
+        #     priority_flow_percentage = calculate_priority_flow_percentage(soil_width, y_coordinate, S_Black)
+        #     priority_flow_label.config(text=f"优先流百分比: {priority_flow_percentage} %")
+        #     black_ratio_label.config(text=f"染色面积比: {black_ratio * 100:.2f} %")
+        # except ValueError:
+        #     messagebox.showerror("错误", "土壤剖面垂直宽度必须是一个数字")
 
     # 计算优先流百分比按钮函数
     def calculate_priority_flow_percentage_button():
