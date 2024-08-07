@@ -10,7 +10,70 @@ import io
 import sys
 import string
 import math
+import threading
+import time
 
+
+class VideoStartupAnimation:
+    def __init__(self, main_window, video_path):
+        self.main_window = main_window
+        self.video_path = video_path
+
+    def play_video(self):
+        # 创建启动动画窗口
+        animation_window = tk.Toplevel(self.main_window)
+        animation_window.overrideredirect(True)
+
+        # 获取屏幕尺寸
+        screen_width = animation_window.winfo_screenwidth()
+        screen_height = animation_window.winfo_screenheight()
+
+        # 读取视频
+        video = cv2.VideoCapture(self.video_path)
+
+        # 获取视频帧的宽度和高度
+        video_width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
+        video_height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+        # 获取视频的帧率
+        fps = video.get(cv2.CAP_PROP_FPS)
+        frame_delay = int(1000 / fps)
+
+        # 将窗口大小设置为视频帧大小，并将其置于屏幕中央
+        x = (screen_width // 2) - (video_width // 2)
+        y = (screen_height // 2) - (video_height // 2)
+        animation_window.geometry(f'{video_width}x{video_height}+{x}+{y}')
+
+        label = tk.Label(animation_window)
+        label.pack()
+
+        def stream_video():
+            while True:
+                ret, frame = video.read()
+                if not ret:
+                    break
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                frame = Image.fromarray(frame)
+                frame = ImageTk.PhotoImage(frame)
+                label.config(image=frame)
+                label.image = frame
+
+                # 控制帧率
+                time.sleep(frame_delay / 4000.0)
+
+                animation_window.update_idletasks()
+                animation_window.update()
+
+            video.release()
+            animation_window.destroy()
+            self.main_window.quit()  # 结束主窗口的 mainloop，退出程序
+
+        threading.Thread(target=stream_video).start()
+
+    def start(self):
+        self.main_window.withdraw()  # 隐藏主窗口，等待动画结束后直接退出
+        self.play_video()
+        self.main_window.mainloop()
 # 使用PIL读取图像的函数
 def read_image_with_pil(image_path):
     with open(image_path, 'rb') as f:
@@ -259,6 +322,10 @@ def display_image(image):
     panel.config(image=imgtk)
     panel.image = imgtk
 
+
+main_window = tk.Tk()
+animation = VideoStartupAnimation(main_window, "C:\\Users\\Lenovo\\Videos\\8月7日.mp4")
+animation.start()
 # 创建GUI
 root = tk.Tk()
 root.title("Preferential flow calculation")  # 设置窗口标题
@@ -370,4 +437,5 @@ panel = ttk.Label(frame9)
 panel.pack()
 
 sv_ttk.set_theme("light")  # 设置主题
+
 root.mainloop()  # 进入主循环
