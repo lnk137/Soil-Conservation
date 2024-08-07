@@ -47,33 +47,35 @@ class VideoStartupAnimation:
         label = tk.Label(animation_window)
         label.pack()
 
-        def stream_video():
-            while True:
-                ret, frame = video.read()
-                if not ret:
-                    break
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                frame = Image.fromarray(frame)
-                frame = ImageTk.PhotoImage(frame)
-                label.config(image=frame)
-                label.image = frame
+        while True:
+            ret, frame = video.read()
+            if not ret:
+                break
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frame = Image.fromarray(frame)
+            frame = ImageTk.PhotoImage(frame)
+            label.config(image=frame)
+            label.image = frame
 
-                # 控制帧率
-                time.sleep(frame_delay / 4000.0)
+            # 控制帧率
+            time.sleep(frame_delay / 3000.0)
 
-                animation_window.update_idletasks()
-                animation_window.update()
+            animation_window.update_idletasks()
+            animation_window.update()
 
-            video.release()
-            animation_window.destroy()
-            self.main_window.quit()  # 结束主窗口的 mainloop，退出程序
-
-        threading.Thread(target=stream_video).start()
+        video.release()
+        animation_window.destroy()
+        self.main_window.destroy() 
 
     def start(self):
-        self.main_window.withdraw()  # 隐藏主窗口，等待动画结束后直接退出
-        self.play_video()
-        self.main_window.mainloop()
+        self.main_window.withdraw()  # 隐藏主窗口
+        self.play_video()  # 在主线程中播放视频并阻塞
+        self.main_window.mainloop()  # 显示主窗口并进入主循环
+
+main_window = tk.Tk()
+animation = VideoStartupAnimation(main_window, "start.mp4")
+animation.start()
+
 # 使用PIL读取图像的函数
 def read_image_with_pil(image_path):
     with open(image_path, 'rb') as f:
@@ -229,42 +231,48 @@ def update_image():
     if img_pil is None:
         return
 
+    # 在更新图像时应用降噪处理
     apply_denoise_if_needed(img_pil)
-    perform_analysis_and_display(img_pil)
+    perform_analysis_and_display(final_img)  # 使用处理后的图像进行分析和显示
 
-# 应用降噪处理（如果需要）
 def apply_denoise_if_needed(img_pil):
     global final_img
     if denoise_var.get():
         try:
+            print(denoise_var.get())
             kernel_size = int(kernel_size_entry.get())
             iterations = int(iterations_entry.get())
         except ValueError:
             messagebox.showerror("错误", "核大小和迭代次数必须是整数")
             return
         final_img = denoise_image(img_pil, kernel_size, iterations)
+        print("成功应用降噪 with kernel size:", kernel_size, "and iterations:", iterations)
     else:
         final_img = img_pil
+        print("未应用降噪")
+    
+    perform_analysis_and_display(final_img)
+
 
 # 执行分析并显示结果函数
 def perform_analysis_and_display(img_pil):
     global final_img, S_Black, y_coordinate, black_ratio
-    final_img = img_pil
-
-    S_Black, black_ratio = calculate_black_area_ratio(final_img)
+    # 在此处使用传入的 img_pil 图像，而不是直接使用 final_img
+    S_Black, black_ratio = calculate_black_area_ratio(img_pil)
     black_area_label.config(text=f"染色面积: {S_Black:.2f} cm^2")
 
-    y_coordinate = find_y_coordinate(final_img)
-    total_difference_proportion = calculate_length_index(final_img)
+    y_coordinate = find_y_coordinate(img_pil)
+    total_difference_proportion = calculate_length_index(img_pil)
     total_difference_proportion_label.config(text=f"长度指数: {total_difference_proportion:.2f} ")
 
     # 在同一图像上绘制红线和蓝线
-    display_img = final_img.copy()
+    display_img = img_pil.copy()
     display_img = draw_red_line(display_img, y_coordinate)
     display_img = draw_blue_line(display_img, get_Start_height())
 
     display_image(display_img)
     y_coordinate_label.config(text=f"基质流深度: {y_coordinate / 10} cm")
+
 
 # 计算优先流百分比按钮函数
 def calculate_priority_flow_percentage_button():
@@ -321,12 +329,10 @@ def display_image(image):
     imgtk = ImageTk.PhotoImage(image=img)
     panel.config(image=imgtk)
     panel.image = imgtk
+    print("显示图像已更新")  # 调试信息
 
-
-main_window = tk.Tk()
-animation = VideoStartupAnimation(main_window, "C:\\Users\\Lenovo\\Videos\\8月7日.mp4")
-animation.start()
 # 创建GUI
+
 root = tk.Tk()
 root.title("Preferential flow calculation")  # 设置窗口标题
 
@@ -339,8 +345,8 @@ browse_button = ttk.Button(frame1, text="浏览", command=browse_file)
 browse_button.pack(side='left')
 
 manual_mode_var = tk.BooleanVar()
-manual_mode_checkbox = ttk.Checkbutton(frame1, text="手动模式", variable=manual_mode_var)
-manual_mode_checkbox.pack(side='left')
+manual_mode_switch = ttk.Checkbutton(frame1, text="手动模式", variable=manual_mode_var, style='Switch.TCheckbutton')
+manual_mode_switch.pack(side='left')
 
 frame2 = ttk.Frame(root)
 frame2.pack(padx=10, pady=5, fill='x')
@@ -389,8 +395,8 @@ upper_value_entry.pack(side='left', padx=2)
 frame6 = ttk.Frame(root)
 frame6.pack(padx=10, pady=10, fill='x')
 denoise_var = tk.BooleanVar()
-denoise_checkbox = ttk.Checkbutton(frame6, text="降噪处理", variable=denoise_var)
-denoise_checkbox.pack(side='left', padx=2)
+denoise_switch = ttk.Checkbutton(frame6, text="降噪处理", variable=denoise_var, style='Switch.TCheckbutton')
+denoise_switch.pack(side='left', padx=2)
 ttk.Label(frame6, text="核大小:").pack(side='left', padx=2)
 kernel_size_entry = ttk.Entry(frame6, width=5)
 kernel_size_entry.insert(0, '3')
@@ -436,6 +442,5 @@ frame9.pack(padx=10, pady=10, fill='x')
 panel = ttk.Label(frame9)
 panel.pack()
 
-sv_ttk.set_theme("light")  # 设置主题
-
+sv_ttk.set_theme("dark")  # 设置主题
 root.mainloop()  # 进入主循环

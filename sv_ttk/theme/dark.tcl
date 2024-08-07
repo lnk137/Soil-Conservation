@@ -4,12 +4,12 @@ namespace eval ttk::theme::sv_dark {
   package provide ttk::theme::sv_dark 2.5
 
   array set colors {
-    -fg      "#fafafa"
-    -bg      "#1c1c1c"
-    -disfg   "#595959"
-    -selfg   "#ffffff"
-    -selbg   "#2f60d8"
-    -accent  "#57c8ff"
+    -fg      "#acb2bf"
+    -bg      "#292c34"
+    -disfg   "#acb2bf"
+    -selfg   "#acb2bf"
+    -selbg   "#414859"
+    -accent  "#414859"
   }
 
   proc load_images {imgfile} {
