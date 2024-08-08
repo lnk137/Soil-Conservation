@@ -76,9 +76,9 @@ class VideoStartupAnimation:
         self.play_video()  # 在主线程中播放视频并阻塞
         self.main_window.mainloop()  # 显示主窗口并进入主循环
 # 播放动画
-main_window = tk.Tk()
-animation = VideoStartupAnimation(main_window, f"{video_path}")
-animation.start()
+# main_window = tk.Tk()
+# animation = VideoStartupAnimation(main_window, f"{video_path}")
+# animation.start()
 
 # 使用PIL读取图像的函数
 def read_image_with_pil(image_path):
@@ -274,7 +274,6 @@ def update_image():
         img_pil = process_and_resize_image(img_pil, lower_range, upper_range)
     if img_pil is None:
         return
-
     # 在更新图像时应用降噪处理
     apply_denoise_if_needed(img_pil)
     perform_analysis_and_display(final_img)  # 使用处理后的图像进行分析和显示
@@ -309,6 +308,7 @@ def perform_analysis_and_display(img_pil):
     total_difference_proportion = calculate_length_index(img_pil)
     total_difference_proportion_label.config(text=f"长度指数: {total_difference_proportion:.2f} ")
     maximum_staining_depth_label.config(text=f"最大染色深度: {maximum_staining_depth(img_pil):.1f} cm")
+    calculate_priority_flow_percentage_button()
     # 在同一图像上绘制红线和蓝线
     display_img = img_pil.copy()
     display_img = draw_red_line(display_img, y_coordinate)
