@@ -76,9 +76,9 @@ class VideoStartupAnimation:
         self.play_video()  # 在主线程中播放视频并阻塞
         self.main_window.mainloop()  # 显示主窗口并进入主循环
 # 播放动画
-# main_window = tk.Tk()
-# animation = VideoStartupAnimation(main_window, f"{video_path}")
-# animation.start()
+main_window = tk.Tk()
+animation = VideoStartupAnimation(main_window, f"{video_path}")
+animation.start()
 
 # 使用PIL读取图像的函数
 def read_image_with_pil(image_path):
