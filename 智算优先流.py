@@ -480,6 +480,7 @@ calculate_button.pack(side='left', padx=2)
 
 ttk.Label(frame7, text="起始坐标(默认为0):").pack(side='left')
 start_height_entry = ttk.Entry(frame7, width=3)
+start_height_entry.insert(0, '0')
 start_height_entry.pack(side='left', padx=10)
 
 frame8 = ttk.Frame(root)
