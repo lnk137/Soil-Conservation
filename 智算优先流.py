@@ -12,8 +12,8 @@ import string
 import math
 import threading
 import time
-#pyinstaller 终极图像处理.py
-#pyinstaller "E:\\AAAAAAAA\\VScode_HugeProject\\Soil-Conservation\\终极图像处理.spec"
+#pyinstaller 智算优先流.py
+#pyinstaller "E:\\AAAAAAAA\\VScode_HugeProject\\Soil-Conservation\\智算优先流.spec"
 
 video_path="./material/start.mp4"
 

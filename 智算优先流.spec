@@ -1,11 +1,11 @@
 # -*- mode: python ; coding: utf-8 -*-
-#pyinstaller 终极图像处理.spec
-#pyinstaller "E:\\AAAAAAAA\\VScode_HugeProject\\Soil-Conservation\\终极图像处理.spec"
+#pyinstaller 智算优先流.spec
+#pyinstaller "E:\\AAAAAAAA\\VScode_HugeProject\\Soil-Conservation\\智算优先流.spec"
 
 block_cipher = None
 
 a = Analysis(
-    ['终极图像处理.py'],
+    ['智算优先流.py'],
     pathex=['E:\\AAAAAAAA\\VScode_HugeProject\\Soil-Conservation'],
     binaries=[],
     datas=[
@@ -27,7 +27,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='终极图像处理',
+    name='智算优先流',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -44,5 +44,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='终极图像处理',
+    name='智算优先流',
 )
