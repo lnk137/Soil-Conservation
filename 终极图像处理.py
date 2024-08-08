@@ -12,6 +12,10 @@ import string
 import math
 import threading
 import time
+#pyinstaller 终极图像处理.py
+#pyinstaller "E:\\AAAAAAAA\\VScode_HugeProject\\Soil-Conservation\\终极图像处理.spec"
+
+video_path="./material/start.mp4"
 
 
 class VideoStartupAnimation:
@@ -71,9 +75,9 @@ class VideoStartupAnimation:
         self.main_window.withdraw()  # 隐藏主窗口
         self.play_video()  # 在主线程中播放视频并阻塞
         self.main_window.mainloop()  # 显示主窗口并进入主循环
-
+# 播放动画
 main_window = tk.Tk()
-animation = VideoStartupAnimation(main_window, "start.mp4")
+animation = VideoStartupAnimation(main_window, f"{video_path}")
 animation.start()
 
 # 使用PIL读取图像的函数
@@ -140,7 +144,28 @@ def find_y_coordinate(img_pil, target_ratio=0.8):
         if black_ratio <= target_ratio:
             return y  # 返回符合条件的y坐标
     return -1  # 如果没有找到符合条件的y坐标
-
+#计算最大染色深度
+def maximum_staining_depth(img_pil, target_ratio=0.005):
+    global max
+    img = np.array(img_pil.convert("L"))  # 转换为灰度图像数组
+    height, width = img.shape
+    max=height
+    empty_count = 0
+    for y in range(height - 1, -1, -1):
+        row = img[y, :]  # 获取当前行像素值
+        black_pixels = np.sum(row <= 200)  # 计算当前行黑色像素数量
+        black_ratio = black_pixels / width  # 计算当前行黑色像素比例
+        print(f"寻找最大染色深度中：当前行为{y}, 黑色像素数{black_pixels}, 总像素数{width}")
+        print(f"寻找最大染色深度中：黑色像素比例{black_ratio}")
+        if black_ratio >= 0.1:
+            break
+        elif black_ratio >= target_ratio:
+            empty_count += 1  # 计算空白行数
+            print(f"空白行数{empty_count}")
+            if empty_count >= 2:
+                max=y  # 返回最大染色深度
+                return max*0.1  # 返回最大染色深度
+    return max*0.1# 如果没有找到符合条件的y坐标
 def calculate_length_index(img_pil):
     img = np.array(img_pil.convert("L"))  # 转换为灰度图像数组
     height, width = img.shape
@@ -169,23 +194,42 @@ def draw_red_line(img_pil, y_coordinate):
     draw = ImageDraw.Draw(img_pil)
     width, height = img_pil.size
     line_thickness = int(height * 0.005)  # 计算线条厚度
-    draw.line([(0, y_coordinate), (width, y_coordinate)], fill="red", width=line_thickness)  # 绘制红线
+    draw.line([(0, y_coordinate), (width, y_coordinate)], fill="#a60d0d", width=line_thickness)  # 绘制红线
     return img_pil
 
 # 在图像上绘制蓝线
 def draw_blue_line(img_pil, y_coordinate):
     draw = ImageDraw.Draw(img_pil)
     width, height = img_pil.size
-    line_thickness = int(height * 0.005)  # 计算线条厚度
-    draw.line([(0, y_coordinate), (width, y_coordinate)], fill="blue", width=line_thickness)  # 绘制蓝线
+    line_thickness = int(height * 0.003)  # 计算线条厚度
+    draw.line([(0, y_coordinate), (width, y_coordinate)], fill="#00acd6", width=line_thickness)  # 绘制蓝线
     return img_pil
 
-# 计算优先流百分比
+# 在图像上绘制绿线
+def draw_green_line(img_pil, y_coordinate):
+    draw = ImageDraw.Draw(img_pil)
+    width, height = img_pil.size
+    line_thickness = int(height * 0.003)  # 计算线条厚度
+    draw.line([(0, y_coordinate), (width, y_coordinate)], fill="#12822a", width=line_thickness)  # 绘制绿线
+    return img_pil
+
+
+# 计算优先流百分数
 def calculate_priority_flow_percentage(soil_width, y_coordinate, S_Black):
     a = soil_width * y_coordinate / 10  # 计算a值
-    b = S_Black  # 获取黑色面积
+    b = S_Black  # 获取染色面积
     print(f"a={a}, b={b}")  # 调试信息
-    result = f"{(1 - a / b) * 100:.2f}"  # 计算优先流百分比
+    result = f"{(1 - a / b) * 100:.2f}"  # 计算优先流百分数
+    return result
+# 计算优先流区染色面积比
+#calculate_area_ratio_of_preferred_flow_zone
+def calculate_area_ratio_of_preferred_flow_zone(soil_width, y_coordinate, S_Black):
+    a=S_Black-y_coordinate*0.1*soil_width
+    soil_area = soil_width * soil_width 
+    result = (a/soil_area)*100
+    print(f"S_Black={S_Black}, y_coordinate={y_coordinate}, soil_width={soil_width}")
+    print(f"a={a}, soil_area={soil_area}")
+    print(f"优先流区染色面积比: {result} %")
     return result
 
 # 获取起始高度
@@ -224,7 +268,7 @@ def update_image():
     lower_range, upper_range = get_color_ranges()
     if lower_range is None or upper_range is None:
         return
-
+    global img_pil  # 添加这行
     img_pil = read_image_with_pil(input_path)
     if not manual_mode_var.get():
         img_pil = process_and_resize_image(img_pil, lower_range, upper_range)
@@ -264,24 +308,28 @@ def perform_analysis_and_display(img_pil):
     y_coordinate = find_y_coordinate(img_pil)
     total_difference_proportion = calculate_length_index(img_pil)
     total_difference_proportion_label.config(text=f"长度指数: {total_difference_proportion:.2f} ")
-
+    maximum_staining_depth_label.config(text=f"最大染色深度: {maximum_staining_depth(img_pil):.1f} cm")
     # 在同一图像上绘制红线和蓝线
     display_img = img_pil.copy()
     display_img = draw_red_line(display_img, y_coordinate)
     display_img = draw_blue_line(display_img, get_Start_height())
-
+    display_img = draw_green_line(display_img, max)
+    print(f"y_coordinate={y_coordinate}, max={max}")
     display_image(display_img)
     y_coordinate_label.config(text=f"基质流深度: {y_coordinate / 10} cm")
+    black_ratio_label.config(text=f"染色面积比: {black_ratio * 100:.2f} %")
 
 
-# 计算优先流百分比按钮函数
+# 计算优先流百分数按钮函数
 def calculate_priority_flow_percentage_button():
     global soil_width, S_Black, y_coordinate, black_ratio
     try:
         soil_width = float(soil_profile_width_entry.get())
         priority_flow_percentage = calculate_priority_flow_percentage(soil_width, y_coordinate, S_Black)
-        priority_flow_label.config(text=f"优先流百分比: {priority_flow_percentage} %")
-        black_ratio_label.config(text=f"染色面积比: {black_ratio * 100:.2f} %")
+        priority_staining_area=calculate_area_ratio_of_preferred_flow_zone(soil_width, y_coordinate,S_Black)
+        priority_staining_label.config(text=f"优先流区染色面积比: {priority_staining_area:.2f} %")
+        priority_flow_label.config(text=f"优先流百分数: {priority_flow_percentage} %")
+        maximum_staining_depth_label.config(text=f"最大染色深度: {maximum_staining_depth(img_pil):.1f} cm")
     except ValueError:
         messagebox.showerror("错误", "土壤剖面垂直宽度必须是一个数字")
 
@@ -334,6 +382,8 @@ def display_image(image):
 # 创建GUI
 
 root = tk.Tk()
+# 设置窗口图标
+root.iconbitmap('material/logo.ico')
 root.title("Preferential flow calculation")  # 设置窗口标题
 
 frame1 = ttk.Frame(root)
@@ -360,6 +410,7 @@ frame3 = ttk.Frame(root)
 frame3.pack(padx=10, pady=5, fill='x')
 ttk.Label(frame3, text="输入分辨率大小 (如500x500):").pack(side='left')
 size_entry = ttk.Entry(frame3, width=50)
+size_entry.insert(0, '500x500')
 size_entry.pack(side='left', padx=10)
 
 frame4 = ttk.Frame(root)
@@ -370,11 +421,11 @@ lower_hue_entry.insert(0, '35')
 lower_hue_entry.pack(side='left', padx=2)
 ttk.Label(frame4, text="下限S:").pack(side='left')
 lower_saturation_entry = ttk.Entry(frame4, width=10)
-lower_saturation_entry.insert(0, '50')
+lower_saturation_entry.insert(0, '35')
 lower_saturation_entry.pack(side='left', padx=2)
 ttk.Label(frame4, text="下限V:").pack(side='left')
 lower_value_entry = ttk.Entry(frame4, width=10)
-lower_value_entry.insert(0, '50')
+lower_value_entry.insert(0, '35')
 lower_value_entry.pack(side='left', padx=2)
 
 frame5 = ttk.Frame(root)
@@ -385,11 +436,11 @@ upper_hue_entry.insert(0, '255')
 upper_hue_entry.pack(side='left', padx=2)
 ttk.Label(frame5, text="上限S:").pack(side='left')
 upper_saturation_entry = ttk.Entry(frame5, width=10)
-upper_saturation_entry.insert(0, '150')
+upper_saturation_entry.insert(0, '255')
 upper_saturation_entry.pack(side='left', padx=2)
 ttk.Label(frame5, text="上限V:").pack(side='left')
 upper_value_entry = ttk.Entry(frame5, width=10)
-upper_value_entry.insert(0, '150')
+upper_value_entry.insert(0, '255')
 upper_value_entry.pack(side='left', padx=2)
 
 frame6 = ttk.Frame(root)
@@ -421,6 +472,7 @@ total_difference_proportion_label.pack(side='left')
 
 ttk.Label(frame7, text="土壤垂直剖面宽度 (cm):").pack(side='left')
 soil_profile_width_entry = ttk.Entry(frame7, width=5)
+soil_profile_width_entry.insert(0, '50')
 soil_profile_width_entry.pack(side='left', padx=10)
 
 calculate_button = ttk.Button(frame7, text="计算", command=calculate_priority_flow_percentage_button)
@@ -432,10 +484,17 @@ start_height_entry.pack(side='left', padx=10)
 
 frame8 = ttk.Frame(root)
 frame8.pack(padx=10, pady=10, fill='x')
-black_ratio_label = ttk.Label(frame8, text="染色面积比: (请点击计算)", width=25)
+maximum_staining_depth_label = ttk.Label(frame8, text="最大染色深度: (请先导入图片)", width=25)
+maximum_staining_depth_label.pack(side='left')
+
+black_ratio_label = ttk.Label(frame8, text="染色面积比: (请先导入图片)", width=25)
 black_ratio_label.pack(side='left')
-priority_flow_label = ttk.Label(frame8, text="优先流百分比: (请点击计算)", width=25)
+
+priority_flow_label = ttk.Label(frame8, text="优先流百分数: (请点击计算)", width=25)
 priority_flow_label.pack(side='left')
+
+priority_staining_label = ttk.Label(frame8, text="优先流区染色面积比比: (请点击计算)")
+priority_staining_label.pack(side='left')
 
 frame9 = ttk.Frame(root)
 frame9.pack(padx=10, pady=10, fill='x')

@@ -1,5 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 #pyinstaller 终极图像处理.spec
+#pyinstaller "E:\\AAAAAAAA\\VScode_HugeProject\\Soil-Conservation\\终极图像处理.spec"
+
 block_cipher = None
 
 a = Analysis(
@@ -31,6 +33,7 @@ exe = EXE(
     strip=False,
     upx=True,
     console=False,
+    icon='material\logo.ico'
 )
 
 coll = COLLECT(
